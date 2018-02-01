@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\samples.microservice.core\samples.microservice.core.csproj">
+      <Project>{2447D6F5-0AD0-4490-91DD-20768226F09E}</Project>
+      <Name>samples.microservice.core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\samples.microservice.entities\samples.microservice.entities.csproj">
+      <Project>{7BECEABC-51B3-4BB7-8E1D-9F0C220FCDD4}</Project>
+      <Name>samples.microservice.entities</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Azure.DocumentDB.Core, Version=1.7.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <HintPath>..\..\..\..\.nuget\packages\microsoft.azure.documentdb.core\1.7.1\lib\netstandard1.6\Microsoft.Azure.DocumentDB.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration.Abstractions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
+      <HintPath>..\..\..\..\.nuget\packages\microsoft.extensions.configuration.abstractions\1.0.0\lib\netstandard1.0\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

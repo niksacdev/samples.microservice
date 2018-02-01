@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\samples.microservice.core\samples.microservice.core.csproj">
+      <Project>{2447D6F5-0AD0-4490-91DD-20768226F09E}</Project>
+      <Name>samples.microservice.core</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
