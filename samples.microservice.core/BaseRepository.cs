@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
@@ -20,9 +21,9 @@ namespace samples.microservice.core
             Logger = logger;
         }
 
-        public abstract Task<bool> SaveAsync<TEntity>(TEntity entity, string modifiedby = null) where TEntity : Entity;
-        public abstract Task DeleteAsync<TEntity>(object id) where TEntity : Entity;
-        public abstract Task<TEntity> ReadSingularAsync<TEntity>(object id) where TEntity : Entity;
-        public abstract Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey, int maxItemCount) where TEntity : Entity;
+        public abstract Task<bool> SaveAsync<TEntity>(TEntity entity, string modifiedby = null, CancellationToken token = default (CancellationToken)) where TEntity : Entity;
+        public abstract Task DeleteAsync<TEntity>(object id, CancellationToken token) where TEntity : Entity;
+        public abstract Task<TEntity> ReadSingularAsync<TEntity>(object id, CancellationToken token = default (CancellationToken)) where TEntity : Entity;
+        public abstract Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey, int maxItemCount, CancellationToken token) where TEntity : Entity;
     }
 }

@@ -50,7 +50,7 @@ namespace samples.microservice.repository
         /// Initialized the database if not already
         /// </summary>
         /// <returns></returns>
-        private  bool EnsureClientConnected()
+        private  async Task<bool> EnsureClientConnected(CancellationToken token)
         {
             try
             {
@@ -71,6 +71,8 @@ namespace samples.microservice.repository
                     }
                 };
 
+                // ensure client is loaded
+                await _client.OpenAsync(token);
                 return true;
             }
             catch (Exception e)
@@ -85,18 +87,20 @@ namespace samples.microservice.repository
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="modifiedby"></param>
+        /// <param name="token"></param>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
-        public override async Task<bool> SaveAsync<TEntity>(TEntity entity, string modifiedby = null)
+        public override async Task<bool> SaveAsync<TEntity>(TEntity entity, string modifiedby = null, CancellationToken token = default (CancellationToken))
         {
-            //TODO: Cosmos API does not support async calls so making synchronous calls, need to investigate.
+            //TODO: Add Polly retry logic to ensure to connect back
             try
             {
-                EnsureClientConnected();
+                await EnsureClientConnected(token);
 
                 // first check if the records already exists, if it does then update
+                var options = new RequestOptions {PartitionKey = new PartitionKey(entity.Id)};
                 await _client.ReadDocumentAsync(UriFactory.CreateDocumentUri(_databaseName, _databaseCollectionName,
-                    entity.Id));
+                    entity.Id), options);
                 Logger.LogInformation("Found {0}", entity.Id);
             }
             catch (DocumentClientException de)
@@ -104,8 +108,9 @@ namespace samples.microservice.repository
                 // if the document does not exist then attempt to insert
                 if (de.StatusCode == HttpStatusCode.NotFound)
                 {
+                    var options = new RequestOptions {PartitionKey = new PartitionKey(entity.Id)};
                     await _client.CreateDocumentAsync(
-                        UriFactory.CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), entity);
+                        UriFactory.CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), entity, options);
                     Logger.LogInformation("Created new entity {0}", entity.Id);
                 }
                 else
@@ -121,13 +126,14 @@ namespace samples.microservice.repository
         /// delete an entity from the database
         /// </summary>
         /// <param name="id"></param>
+        /// <param name="token"></param>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public override async Task DeleteAsync<TEntity>(object id)
+        public override async Task DeleteAsync<TEntity>(object id, CancellationToken token)
         {
             //TODO: Cosmos API does not support async calls so making synchronous calls, need to investigate.
-            EnsureClientConnected();
+            await EnsureClientConnected(token);
             throw new NotImplementedException();
         }
 
@@ -135,12 +141,13 @@ namespace samples.microservice.repository
         /// reads the entity based on Id
         /// </summary>
         /// <param name="id"></param>
+        /// <param name="token"></param>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
-        public override async Task<TEntity> ReadSingularAsync<TEntity>(object id)
+        public override async Task<TEntity> ReadSingularAsync<TEntity>(object id, CancellationToken token = default (CancellationToken))
         {
             //TODO: Cosmos API does not support async calls so making synchronous calls, need to investigate.
-            EnsureClientConnected();
+            await EnsureClientConnected(token);
             var entities = new List<TEntity>();
             var queryOptions = new FeedOptions { MaxItemCount = -1 };
             var documentQuery = _client.CreateDocumentQuery<TEntity>(UriFactory
@@ -154,10 +161,10 @@ namespace samples.microservice.repository
         /// </summary>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
-        public override async Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey, int maxItemCount)
+        public override async Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey, int maxItemCount, CancellationToken token = default (CancellationToken))
         {
             //TODO: Cosmos API does not support async calls so making synchronous calls, need to investigate.
-            EnsureClientConnected();
+            await EnsureClientConnected(token);
             var entities = new List<TEntity>();
             var queryOptions = new FeedOptions { MaxItemCount = maxItemCount };
             var documentQuery = _client.CreateDocumentQuery<TEntity>(UriFactory
