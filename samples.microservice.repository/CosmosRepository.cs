@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Net;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,12 +18,10 @@ namespace samples.microservice.repository
     public class CosmosRepository: BaseRepository
     {
         private static DocumentClient _client;
-        private readonly string _databaseName = "niksac-docdb";
-        private readonly string _databaseCollectionName ="niksac-docdb-col1";
-        private string _cosmosEndPoint;
-        private string _cosmosKey;
-
-        private ILogger logger;
+        private readonly string _databaseName;
+        private readonly string _databaseCollectionName ;
+        private readonly string _cosmosEndPoint;
+        private readonly string _cosmosKey;
 
         /// <summary>
         /// Constructor for CosmosRepository
@@ -50,7 +50,7 @@ namespace samples.microservice.repository
         /// Initialized the database if not already
         /// </summary>
         /// <returns></returns>
-        private async Task<bool> InitializeDatabaseAsync()
+        private  bool EnsureClientConnected()
         {
             try
             {
@@ -71,19 +71,11 @@ namespace samples.microservice.repository
                     }
                 };
 
-                // The below code does not need to run if you are managing creation through scripts
-//                // Create a database if not exists
-//                await _client.CreateDatabaseIfNotExistsAsync(new Database {Id = _databaseName});
-//
-//                // create a collection if not exists
-//                var response = await _client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri(_databaseName),
-//                    new DocumentCollection {Id = _databaseCollectionName});
-
                 return true;
             }
             catch (Exception e)
             {
-                logger.LogError($"Error occurred: {e.Message}", e);
+                Logger.LogError($"Error occurred: {e.Message}", e);
                 throw;
             }
         }
@@ -95,11 +87,34 @@ namespace samples.microservice.repository
         /// <param name="modifiedby"></param>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
         public override async Task<bool> SaveAsync<TEntity>(TEntity entity, string modifiedby = null)
         {
-            await InitializeDatabaseAsync();
-            throw new NotImplementedException();
+            //TODO: Cosmos API does not support async calls so making synchronous calls, need to investigate.
+            try
+            {
+                EnsureClientConnected();
+
+                // first check if the records already exists, if it does then update
+                await _client.ReadDocumentAsync(UriFactory.CreateDocumentUri(_databaseName, _databaseCollectionName,
+                    entity.Id));
+                Logger.LogInformation("Found {0}", entity.Id);
+            }
+            catch (DocumentClientException de)
+            {
+                // if the document does not exist then attempt to insert
+                if (de.StatusCode == HttpStatusCode.NotFound)
+                {
+                    await _client.CreateDocumentAsync(
+                        UriFactory.CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), entity);
+                    Logger.LogInformation("Created new entity {0}", entity.Id);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -111,7 +126,8 @@ namespace samples.microservice.repository
         /// <exception cref="NotImplementedException"></exception>
         public override async Task DeleteAsync<TEntity>(object id)
         {
-            await InitializeDatabaseAsync();
+            //TODO: Cosmos API does not support async calls so making synchronous calls, need to investigate.
+            EnsureClientConnected();
             throw new NotImplementedException();
         }
 
@@ -121,11 +137,16 @@ namespace samples.microservice.repository
         /// <param name="id"></param>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
         public override async Task<TEntity> ReadSingularAsync<TEntity>(object id)
         {
-            await InitializeDatabaseAsync();
-            throw new NotImplementedException();
+            //TODO: Cosmos API does not support async calls so making synchronous calls, need to investigate.
+            EnsureClientConnected();
+            var entities = new List<TEntity>();
+            var queryOptions = new FeedOptions { MaxItemCount = -1 };
+            var documentQuery = _client.CreateDocumentQuery<TEntity>(UriFactory
+                    .CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), queryOptions)
+                .Where(c => c.Id == id.ToString());
+            return documentQuery.FirstOrDefault();
         }
 
         /// <summary>
@@ -135,7 +156,8 @@ namespace samples.microservice.repository
         /// <returns></returns>
         public override async Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey, int maxItemCount)
         {
-            await InitializeDatabaseAsync();
+            //TODO: Cosmos API does not support async calls so making synchronous calls, need to investigate.
+            EnsureClientConnected();
             var entities = new List<TEntity>();
             var queryOptions = new FeedOptions { MaxItemCount = maxItemCount };
             var documentQuery = _client.CreateDocumentQuery<TEntity>(UriFactory

@@ -26,17 +26,16 @@ namespace samples.microservice.api.Controllers
             _configuration = configuration;
             _repository = repository;
             _logger = loggerFactory.CreateLogger<VehicleController>();
-
             _logger.LogInformation($"Entering Cosmos Controller");
         }
 
         // GET
         [HttpGet("/vehicle")]
-        public async Task<List<MyDocument>> GetAsync()
+        public async Task<List<VehicleData>> GetAsync()
         {
             try
             {
-                return await _repository.ReadAsync<MyDocument>();
+                return await _repository.ReadAsync<VehicleData>();
             }
             catch (Exception e)
             {
@@ -46,11 +45,11 @@ namespace samples.microservice.api.Controllers
         }
 
         [HttpGet("/vehicle/{id}")]
-        public async Task<MyDocument> GetAsync(string id)
+        public async Task<VehicleData> GetAsync(string id)
         {
             try
             {
-                return await _repository.ReadAsync<MyDocument>(id);
+                return await _repository.ReadSingularAsync<VehicleData>(id);
             }
             catch (Exception e)
             {
@@ -60,7 +59,7 @@ namespace samples.microservice.api.Controllers
         }
 
         [HttpPost ("/vehicle")]
-        public async Task<bool> Save([FromBody] MyDocument document)
+        public async Task<bool> Save([FromBody] VehicleData document)
         {
             try
             {
