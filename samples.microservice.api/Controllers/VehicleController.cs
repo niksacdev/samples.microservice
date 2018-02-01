@@ -9,12 +9,11 @@ using Microsoft.Extensions.Logging;
 
 namespace samples.microservice.api.Controllers
 {
-    [Route("/cosmos")]
-    public class CosmosController: Controller
+    public class VehicleController: Controller
     {
         private IConfiguration _configuration;
-        private ILogger _logger;
-        private IRepository _repository;
+        private readonly ILogger _logger;
+        private readonly IRepository _repository;
 
         /// <summary>
         /// Controller representing communication with Cosmos Db
@@ -22,17 +21,17 @@ namespace samples.microservice.api.Controllers
         /// <param name="configuration"></param>
         /// <param name="repository"></param>
         /// <param name="loggerFactory"></param>
-        public CosmosController(IConfiguration configuration,  IRepository repository, ILoggerFactory loggerFactory)
+        public VehicleController(IConfiguration configuration,  IRepository repository, ILoggerFactory loggerFactory)
         {
             _configuration = configuration;
             _repository = repository;
-            _logger = loggerFactory.CreateLogger<CosmosController>();
+            _logger = loggerFactory.CreateLogger<VehicleController>();
 
             _logger.LogInformation($"Entering Cosmos Controller");
         }
 
         // GET
-        [HttpGet("/documents")]
+        [HttpGet("/vehicle")]
         public async Task<List<MyDocument>> GetAsync()
         {
             try
@@ -46,7 +45,7 @@ namespace samples.microservice.api.Controllers
             }
         }
 
-        [HttpGet("/documents/{id}")]
+        [HttpGet("/vehicle/{id}")]
         public async Task<MyDocument> GetAsync(string id)
         {
             try
@@ -60,7 +59,7 @@ namespace samples.microservice.api.Controllers
             }
         }
 
-        [HttpPost ("/documents")]
+        [HttpPost ("/vehicle")]
         public async Task<bool> Save([FromBody] MyDocument document)
         {
             try
