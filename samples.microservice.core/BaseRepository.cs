@@ -22,7 +22,7 @@ namespace samples.microservice.core
 
         public abstract Task<bool> SaveAsync<TEntity>(TEntity entity, string modifiedby = null) where TEntity : Entity;
         public abstract Task DeleteAsync<TEntity>(object id) where TEntity : Entity;
-        public abstract Task<TEntity> ReadAsync<TEntity>(object id) where TEntity : Entity;
-        public abstract Task<List<TEntity>> ReadAsync<TEntity>() where TEntity : Entity;
+        public abstract Task<TEntity> ReadSingularAsync<TEntity>(object id) where TEntity : Entity;
+        public abstract Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey, int maxItemCount) where TEntity : Entity;
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -14,11 +15,11 @@ namespace samples.microservice.repository
 {
     public class CosmosRepository: BaseRepository
     {
-        private DocumentClient _client;
+        private static DocumentClient _client;
         private readonly string _databaseName = "niksac-docdb";
         private readonly string _databaseCollectionName ="niksac-docdb-col1";
         private string _cosmosEndPoint;
-        private SecureString _cosmosKey;
+        private string _cosmosKey;
 
         private ILogger logger;
 
@@ -34,12 +35,7 @@ namespace samples.microservice.repository
                 // TODO: Move this away from constructor into OWIN middleware
                 // get the cosmos values from configuration
                 _cosmosEndPoint = configuration["cosmos-uri"];
-                _cosmosKey = new SecureString();
-                foreach (var keyChar in configuration["cosmos-key"].ToCharArray())
-                {
-                    _cosmosKey.AppendChar(keyChar);
-                }
-
+                _cosmosKey = configuration["cosmos-key"];
                 _databaseName = configuration["cosmos-dbName"];
                 _databaseCollectionName = configuration["cosmos-db-CollectionName"];
             }
@@ -59,21 +55,29 @@ namespace samples.microservice.repository
             try
             {
                 // connecting to the Cosmos Document db store
+                //TODO: make client singleton and lazy initialize
+                if (_client != null) return true;
                 _client = new DocumentClient(new Uri(_cosmosEndPoint), _cosmosKey)
                 {
                     ConnectionPolicy =
                     {
                         ConnectionMode = ConnectionMode.Direct,
                         ConnectionProtocol = Protocol.Tcp,
+                        RetryOptions = new RetryOptions
+                        {
+                            MaxRetryAttemptsOnThrottledRequests = 3, // circuit breaker
+                            MaxRetryWaitTimeInSeconds = 30 // circuit breaker
+                        }
                     }
                 };
 
-                // Create a database if not exists
-                await this._client.CreateDatabaseIfNotExistsAsync(new Database {Id = _databaseName});
-
-                // create a collection if not exists
-                var response = await this._client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri(_databaseName),
-                    new DocumentCollection {Id = _databaseCollectionName});
+                // The below code does not need to run if you are managing creation through scripts
+//                // Create a database if not exists
+//                await _client.CreateDatabaseIfNotExistsAsync(new Database {Id = _databaseName});
+//
+//                // create a collection if not exists
+//                var response = await _client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri(_databaseName),
+//                    new DocumentCollection {Id = _databaseCollectionName});
 
                 return true;
             }
@@ -82,9 +86,6 @@ namespace samples.microservice.repository
                 logger.LogError($"Error occurred: {e.Message}", e);
                 throw;
             }
-
-
-
         }
 
         /// <summary>
@@ -121,7 +122,7 @@ namespace samples.microservice.repository
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public override async Task<TEntity> ReadAsync<TEntity>(object id)
+        public override async Task<TEntity> ReadSingularAsync<TEntity>(object id)
         {
             await InitializeDatabaseAsync();
             throw new NotImplementedException();
@@ -132,19 +133,14 @@ namespace samples.microservice.repository
         /// </summary>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
-        public override async Task<List<TEntity>> ReadAsync<TEntity>()
+        public override async Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey, int maxItemCount)
         {
             await InitializeDatabaseAsync();
             var entities = new List<TEntity>();
-            var queryOptions = new FeedOptions { MaxItemCount = -1 };
-            var documentQuery = this._client.CreateDocumentQuery<MyDocument>(UriFactory
-                    .CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), queryOptions)
-                .Where(f => f.Id == "1");
-
-            foreach (var document in documentQuery)
-            {
-                entities.Add(document as TEntity);
-            }
+            var queryOptions = new FeedOptions { MaxItemCount = maxItemCount };
+            var documentQuery = _client.CreateDocumentQuery<TEntity>(UriFactory
+                .CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), queryOptions);
+            entities.AddRange(documentQuery);
 
             return entities;
         }

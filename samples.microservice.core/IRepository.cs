@@ -28,9 +28,9 @@ namespace samples.microservice.core
         /// <param name="id">i </param>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
-        Task<TEntity> ReadAsync<TEntity>(object id) where TEntity : Entity;
+        Task<TEntity> ReadSingularAsync<TEntity>(object id) where TEntity : Entity;
 
-        Task<List<TEntity>> ReadAsync<TEntity>() where TEntity : Entity;
+        Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey = null, int maxItemCount = 10) where TEntity : Entity;
 
     }
 }
