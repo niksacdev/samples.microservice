@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using samples.microservice.core;
 using samples.microservice.entities;
-using ILogger = Serilog.ILogger;
+using Microsoft.Extensions.Logging;
 
 namespace samples.microservice.api.Controllers
 {
@@ -21,12 +21,12 @@ namespace samples.microservice.api.Controllers
         /// </summary>
         /// <param name="configuration"></param>
         /// <param name="repository"></param>
-        public CosmosController(IConfiguration configuration,  IRepository repository)
+        /// <param name="logger"></param>
+        public CosmosController(IConfiguration configuration,  IRepository repository, ILogger logger)
         {
             _configuration = configuration;
             _repository = repository;
-
-           //  _logger.Information($"Entering Cosmos Controller");
+            _logger.LogInformation($"Entering Cosmos Controller");
         }
 
         // GET
@@ -39,7 +39,7 @@ namespace samples.microservice.api.Controllers
             }
             catch (Exception e)
             {
-                _logger.Error(e, $"Error in Get {e.Message}");
+                _logger.LogError(e, $"Error in Get {e.Message}");
                 throw;
             }
         }
@@ -53,7 +53,7 @@ namespace samples.microservice.api.Controllers
             }
             catch (Exception e)
             {
-                _logger.Error(e, $"Error in Get {e.Message}");
+                _logger.LogError(e, $"Error in Get {e.Message}");
                 throw;
             }
         }
@@ -67,7 +67,7 @@ namespace samples.microservice.api.Controllers
             }
             catch (Exception e)
             {
-                _logger.Error(e, $"Error in Get {e.Message}");
+                _logger.LogError(e, $"Error in Get {e.Message}");
                 throw;
             }
         }

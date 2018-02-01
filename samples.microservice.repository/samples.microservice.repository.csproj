@@ -19,5 +19,8 @@
     <Reference Include="Microsoft.Extensions.Configuration.Abstractions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
       <HintPath>..\..\..\..\.nuget\packages\microsoft.extensions.configuration.abstractions\1.0.0\lib\netstandard1.0\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
     </Reference>
+    <Reference Include="Serilog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10">
+      <HintPath>..\..\..\..\.nuget\packages\serilog\2.7.1-dev-00950\lib\netstandard1.3\Serilog.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

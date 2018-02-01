@@ -9,6 +9,8 @@
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.3" />
     <PackageReference Include="Microsoft.Azure.DocumentDB" Version="1.19.1" />
     <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.7.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Serilog" Version="2.7.1-dev-00950" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.2" />
@@ -31,5 +33,11 @@
       <Project>{BA21605E-74BC-4CF3-BEE0-D10DE45931CB}</Project>
       <Name>samples.microservice.repository</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="appsettings.Development.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="appsettings.json" />
   </ItemGroup>
 </Project>

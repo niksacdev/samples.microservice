@@ -20,17 +20,42 @@ namespace samples.microservice.api
                 {
                     // ensure settings are being read
                     var env = context.HostingEnvironment;
-                    config.AddEnvironmentVariables();
-                    config.AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true,
-                        reloadOnChange: true);
 
-                    // adding logging configuration to enable serilog
-                    Log.Logger = new LoggerConfiguration()
-                        .MinimumLevel.Verbose()
-                        .WriteTo.ColoredConsole().CreateLogger();
+                    // add the environment variables to the config.
+                    config.AddEnvironmentVariables();
 
 
                     // add keyvault configuration
+                    /*** CONVENTIONAL WAY: See below for conventional way of getting secrets from a config file, this requires a configuration file with
+                     the following details
+                        {
+                          "vault": "<your keyvault name here>",
+                          "clientId": "<your client Id here>",
+                          "clientSecret": "<your client secret here>",
+                          "kvuri":"https://{vault-name}.vault.azure.net/"
+                        }
+
+                        and then the below code to get the data.
+
+                        // add the configuration file for getting keyvault configuration data
+                        config.SetBasePath(Directory.GetCurrentDirectory())
+                            .AddEnvironmentVariables()
+                            .AddJsonFile($"secrets.{env.EnvironmentName}.json", optional: false, reloadOnChange: true);
+
+                        // add azure key vault configuration
+                        var buildConfig = config.Build();
+
+                        // get the key vault  uri
+                        var vaultUri = buildConfig["kvuri"].Replace("{vault-name}", buildConfig["vault"]);
+
+                        In this sample we have elimnated the need to get the above file from a secret file and rather use
+                        Kubernetes ConfigMaps and Secrets, the main configuration is still kept within KeyVault.
+                    ****/
+
+                    // Instead of getting KV configuration details from a settings file, Kubernetes will push those details as
+                    // Environment variables for the container, use the Enviroment variables directly to access information
+
+                    // add the configuration file for getting keyvault configuration data
                     config.SetBasePath(Directory.GetCurrentDirectory())
                         .AddEnvironmentVariables()
                         .AddJsonFile($"secrets.{env.EnvironmentName}.json", optional: false, reloadOnChange: true);
@@ -47,6 +72,13 @@ namespace samples.microservice.api
                 })
                 .ConfigureLogging((context, logging) =>
                 {
+                    // Configure Serilog
+                    // adding logging configuration to enable serilog
+                    //TODO: configure logger per environment
+                    Log.Logger = new LoggerConfiguration()
+                        .MinimumLevel.Verbose()
+                        .WriteTo.ColoredConsole().CreateLogger();
+
                     // configure serilog as the middleware
                     logging.AddSerilog(dispose: true);
                     logging.AddConsole();

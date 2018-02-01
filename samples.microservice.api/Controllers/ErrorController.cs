@@ -14,7 +14,7 @@ namespace samples.microservice.api.Controllers
         [Route("error/{code}")]
         public async Task Error(int code)
         {
-            await HttpContext.Response.WriteAsync($"Error code: {code}");
+            await HttpContext.Response.WriteAsync($"An error occurred, Error code: {code}");
         }
     }
 }
