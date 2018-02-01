@@ -21,11 +21,13 @@ namespace samples.microservice.api.Controllers
         /// </summary>
         /// <param name="configuration"></param>
         /// <param name="repository"></param>
-        /// <param name="logger"></param>
-        public CosmosController(IConfiguration configuration,  IRepository repository, ILogger logger)
+        /// <param name="loggerFactory"></param>
+        public CosmosController(IConfiguration configuration,  IRepository repository, ILoggerFactory loggerFactory)
         {
             _configuration = configuration;
             _repository = repository;
+            _logger = loggerFactory.CreateLogger<CosmosController>();
+
             _logger.LogInformation($"Entering Cosmos Controller");
         }
 
