@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using samples.microservice.core;
 using samples.microservice.repository;
-using Microsoft.Extensions.Logging;
 
 namespace samples.microservice.api
 {
@@ -59,10 +58,7 @@ namespace samples.microservice.api
 
             app.UseMiddleware<ErrorHandlingMiddleware>();
             // use MVC framework and map routes to controllers
-            app.UseMvc(routes =>
-            {
-                routes.MapAreaRoute("api_route", "cosmosapi", "api/{Controller}/{Action}/{id?}");
-            });
+            app.UseMvc();
         }
     }
 }
