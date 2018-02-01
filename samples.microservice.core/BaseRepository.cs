@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace samples.microservice.core
 {
+    /// <summary>
+    /// Template pattern for repository building
+    /// </summary>
     public abstract class BaseRepository: IRepository
     {
         protected IConfiguration Configuration;
