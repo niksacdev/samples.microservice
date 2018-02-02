@@ -1,0 +1,23 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: vehicle-api-deploy
+  labels:
+    app: vehicle-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vehicle-api
+  template:
+    metadata:
+      labels:
+        app: vehicle-api
+    spec:
+      containers:
+      - name: vehicle-api
+        image: niksac/vehicle-api
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+

@@ -19,14 +19,6 @@ namespace samples.microservice.api
             return WebHost.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration((context, config) =>
                 {
-                    // ensure settings are being read
-                    var env = context.HostingEnvironment;
-
-                    // add the environment variables to the config.
-                    config.AddEnvironmentVariables();
-
-
-                    // add keyvault configuration
                     /*** CONVENTIONAL WAY: See below for conventional way of getting secrets from a config file, this requires a configuration file with
                      the following details
                         {
@@ -53,15 +45,13 @@ namespace samples.microservice.api
                         Kubernetes ConfigMaps and Secrets, the main configuration is still kept within KeyVault.
                     ****/
 
-                    // Instead of getting KV configuration details from a settings file, Kubernetes will push those details as
+                    // ***** KUBERNETES WAY: Instead of getting KV configuration details from a settings file, Kubernetes will push those details as
                     // Environment variables for the container, use the Enviroment variables directly to access information
 
-                    // add the configuration file for getting keyvault configuration data
-                    config.SetBasePath(Directory.GetCurrentDirectory())
-                        .AddEnvironmentVariables()
-                        .AddJsonFile($"secrets.{env.EnvironmentName}.json", false, true);
+                    // add the environment variables to config
+                    config.AddEnvironmentVariables();
 
-                    // add azure key vault configuration
+                    // add azure key vault configuration using environment variables
                     var buildConfig = config.Build();
 
                     // get the key vault  uri
