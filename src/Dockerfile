@@ -12,11 +12,11 @@ RUN dotnet publish -c Release -o out
 
 # Build runtime image
 FROM microsoft/aspnetcore:2.0
-#Add ENV variables
-ENV vault "niksac-kv"
-ENV clientId "4dee3790-5990-454d-b875-6d82456cba84"
-ENV clientSecret "fYn4vc836sNayvr8fQn4vYzS6qwmXmnFF/ovDvIyfHc="
-ENV kvuri "https://{vault-name}.vault.azure.net/"
+##Add ENV variables
+#ENV vault "niksac-kv"
+#ENV clientId "4dee3790-5990-454d-b875-6d82456cba84"
+#ENV clientSecret "fYn4vc836sNayvr8fQn4vYzS6qwmXmnFF/ovDvIyfHc="
+#ENV kvuri "https://{vault-name}.vault.azure.net/"
 
 WORKDIR /app
 # NOTE: Need to find a way to automate the below copy, currently if you create a sln file build

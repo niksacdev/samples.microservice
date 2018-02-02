@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: vehicle-api-svc
+  name: vehicle-api-svc #name for the service
 spec:
-  type: LoadBalancer
+  type: LoadBalancer #specify that the service type will be load balancer so public endpoint
   ports:
-  - name: http
+  - name: http #port
     port: 80
     targetPort: 80
   selector:
-    app: vehicle-api
+    app: vehicle-api # label to match the underlying pod deployments, this much match the deployment label
 
 

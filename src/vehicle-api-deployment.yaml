@@ -1,23 +1,45 @@
-apiVersion: apps/v1beta2
+apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: vehicle-api-deploy
+  name: vehicle-api-deploy #name for the deployment
   labels:
-    app: vehicle-api
+    app: vehicle-api #label that will be used to map the service, this tag is very important
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: vehicle-api
+      app: vehicle-api #label that will be used to map the service, this tag is very important
   template:
     metadata:
       labels:
-        app: vehicle-api
+        app: vehicle-api #label that will be used to map the service, this tag is very important
     spec:
       containers:
-      - name: vehicle-api
-        image: niksac/vehicle-api
-        imagePullPolicy: Always
+      - name: vehicleapi #name for the container configuration
+        image: niksac/vehicleapi:v1 # the tag for the container to be deployed
+        imagePullPolicy: Always #getting latest image on each deployment
         ports:
-        - containerPort: 80
-
+        - containerPort: 80 #map to port 80 in the docker container
+        env: #set environment variables for the docker container using configMaps and Secret Keys
+        - name: clientId
+          valueFrom:
+            configMapKeyRef:
+              name: clientid
+              key: clientId
+        - name: kvuri
+          valueFrom:
+            configMapKeyRef:
+              name: kvuri
+              key: kvuri
+        - name: vault
+          valueFrom:
+            configMapKeyRef:
+              name: vault
+              key: vault
+        - name: clientsecret
+          valueFrom:
+            secretKeyRef:
+              name: clientsecret
+              key: clientSecret
+      imagePullSecrets: #secret to get details of private repo, disable this if using public docker repo
+      - name: regsecret

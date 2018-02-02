@@ -45,7 +45,7 @@ namespace samples.microservice.api
                         Kubernetes ConfigMaps and Secrets, the main configuration is still kept within KeyVault.
                     ****/
 
-                    // ***** KUBERNETES WAY: Instead of getting KV configuration details from a settings file, Kubernetes will push those details as
+                    // ***** CONTAINER WAY: Instead of getting KV configuration details from a settings file, Kubernetes will push those details as
                     // Environment variables for the container, use the Enviroment variables directly to access information
 
                     // add the environment variables to config
