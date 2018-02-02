@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
-namespace samples.microservice.core
+namespace samples.microservice.api
 {
     public class ErrorHandlingMiddleware
     {
