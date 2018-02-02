@@ -62,18 +62,19 @@ namespace samples.microservice.repository
                     ConnectionPolicy =
                     {
                         ConnectionMode = ConnectionMode.Direct,
-                        ConnectionProtocol = Protocol.Tcp,
-                        RetryOptions = new RetryOptions
-                        {
-                            MaxRetryAttemptsOnThrottledRequests = 3, // circuit breaker
-                            MaxRetryWaitTimeInSeconds = 30 // circuit breaker
-                        }
+                        ConnectionProtocol = Protocol.Https // TODO: move to TCP, firewall configuration blocking at the moment
                     }
                 };
 
-                // ensure client is loaded
+                // ensure client is loaded to optimize performance
                 await _client.OpenAsync(token);
                 return true;
+            }
+            catch (DocumentClientException de)
+            {
+                var baseException = de.GetBaseException();
+                Logger.LogError($"Error occurred: {de.Message} Base exception was: {baseException.Message}", de);
+                throw;
             }
             catch (Exception e)
             {
@@ -99,9 +100,14 @@ namespace samples.microservice.repository
 
                 // first check if the records already exists, if it does then update
                 var options = new RequestOptions {PartitionKey = new PartitionKey(entity.Id)};
-                await _client.ReadDocumentAsync(UriFactory.CreateDocumentUri(_databaseName, _databaseCollectionName,
+                var response = await _client.ReadDocumentAsync(UriFactory.CreateDocumentUri(_databaseName, _databaseCollectionName,
                     entity.Id), options);
-                Logger.LogInformation("Found {0}", entity.Id);
+                Logger.LogInformation("Found {0} during upsert", entity.Id);
+
+                // Update the document instead of adding a new one
+                await _client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(_databaseName, _databaseCollectionName, entity.Id),
+                    entity);
+                Logger.LogInformation("Entity {0} Updated", entity.Id);
             }
             catch (DocumentClientException de)
             {
@@ -132,9 +138,18 @@ namespace samples.microservice.repository
         /// <exception cref="NotImplementedException"></exception>
         public override async Task DeleteAsync<TEntity>(object id, CancellationToken token)
         {
-            //TODO: Cosmos API does not support async calls so making synchronous calls, need to investigate.
-            await EnsureClientConnected(token);
-            throw new NotImplementedException();
+            try
+            {
+                await EnsureClientConnected(token);
+                var options = new RequestOptions {PartitionKey = new PartitionKey(id.ToString())};
+                await _client.DeleteDocumentAsync(
+                    UriFactory.CreateDocumentUri(_databaseName, _databaseCollectionName, id.ToString()), options);
+            }
+            catch (Exception e)
+            {
+                Logger.LogInformation($"Error occurred {e.Message}  details: {e}");
+                throw;
+            }
         }
 
         /// <summary>
@@ -144,16 +159,25 @@ namespace samples.microservice.repository
         /// <param name="token"></param>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
-        public override async Task<TEntity> ReadSingularAsync<TEntity>(object id, CancellationToken token = default (CancellationToken))
+        public override async Task<TEntity> ReadSingularAsync<TEntity>(object id,
+            CancellationToken token = default(CancellationToken))
         {
-            //TODO: Cosmos API does not support async calls so making synchronous calls, need to investigate.
-            await EnsureClientConnected(token);
-            var entities = new List<TEntity>();
-            var queryOptions = new FeedOptions { MaxItemCount = -1 };
-            var documentQuery = _client.CreateDocumentQuery<TEntity>(UriFactory
-                    .CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), queryOptions)
-                .Where(c => c.Id == id.ToString());
-            return documentQuery.FirstOrDefault();
+            //TODO: Cosmos API does not support async query methods, need to investigate.
+            try
+            {
+                await EnsureClientConnected(token);
+                var entities = new List<TEntity>();
+                var queryOptions = new FeedOptions {MaxItemCount = -1};
+                var documentQuery = _client.CreateDocumentQuery<TEntity>(UriFactory
+                        .CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), queryOptions)
+                    .Where(c => c.Id == id.ToString());
+                return documentQuery.FirstOrDefault();
+            }
+            catch (Exception e)
+            {
+                Logger.LogInformation($"Error occurred {e.Message}  details: {e}");
+                throw;
+            }
         }
 
         /// <summary>
@@ -161,17 +185,26 @@ namespace samples.microservice.repository
         /// </summary>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
-        public override async Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey, int maxItemCount, CancellationToken token = default (CancellationToken))
+        public override async Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey, int maxItemCount,
+            CancellationToken token)
         {
-            //TODO: Cosmos API does not support async calls so making synchronous calls, need to investigate.
-            await EnsureClientConnected(token);
-            var entities = new List<TEntity>();
-            var queryOptions = new FeedOptions { MaxItemCount = maxItemCount };
-            var documentQuery = _client.CreateDocumentQuery<TEntity>(UriFactory
-                .CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), queryOptions);
-            entities.AddRange(documentQuery);
+            //TODO: Cosmos API does not support async query methods, need to investigate.
+            try
+            {
+                await EnsureClientConnected(token);
+                var entities = new List<TEntity>();
+                var queryOptions = new FeedOptions {MaxItemCount = maxItemCount};
+                var documentQuery = _client.CreateDocumentQuery<TEntity>(UriFactory
+                    .CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), queryOptions);
+                entities.AddRange(documentQuery);
 
-            return entities;
+                return entities;
+            }
+            catch (Exception e)
+            {
+                Logger.LogInformation($"Error occurred {e.Message}  details: {e}");
+                throw;
+            }
         }
     }
 }
