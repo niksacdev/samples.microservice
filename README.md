@@ -16,7 +16,17 @@
 
 ### What do you need to run the sample:
 All the configuration files for ASP.NET Core have been moved out so you will not see any appSettings.json rather you need to configure Kubernetes and Azure KeyVault with the right configurations:
-- Configure Azure KeyVault and add configuration values to it, here is a sample to do it: https://medium.com/@patoncrispy/securing-settings-in-dot-net-core-apps-using-azure-key-vault-d4ec82de00b8. DONOT put the configuration in the appSettings file as mentioned in the blog post, we will instead use Kubernetes config Maps for that.
+- Configure Azure KeyVault and add configuration values to it, here is a sample to do it: https://medium.com/@patoncrispy/securing-settings-in-dot-net-core-apps-using-azure-key-vault-d4ec82de00b8. DONOT put the configuration in the appSettings file as mentioned in the blog post, we will instead use Kubernetes config Maps for that. You need the following values in your KeyVault for the service to work, you can add additional values and pull them in the application as well:
+
+````
+Azure KeyVault Key-Pairs required for Cosmos DB repository:
+1. cosmos-connstr - database connection string
+2. cosmos-db-CollectionName - cosmos collection name
+3. cosmos-dbname - name of the database for the Document API
+4. cosmos-key - your primary key
+5. cosmos-uri - e.g. https://<yourcosmos>.documents.azure.com:443/
+````
+If you dont have a CosmosDB database, you can create one using the steps here: https://docs.microsoft.com/en-us/azure/cosmos-db/. You dont need to create the API using this tutorial just the Azure portal database account steps.
 
 - Configure Kubernetes with ConfigMaps and Secrets
 Instead of putting your Azure Key Vault details in a appSettings or secrets.json file, we will use ConfigMaps and Secrets to automatically inject these values during pod deployment. This is where you get clear separation between DevOps teams who manage the config data and Development teams who are only interested in the key to fetch the value. 
