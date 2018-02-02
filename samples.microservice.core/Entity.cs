@@ -18,7 +18,7 @@ namespace samples.microservice.core
         public Dictionary<string, string> CustomProperties { get; set; }
 
         /// <summary>
-        /// serialize JSON into string
+        ///     serialize JSON into string
         /// </summary>
         /// <returns></returns>
         public override string ToString()

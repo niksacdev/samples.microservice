@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace samples.microservice.api.Controllers
 {
-    public class ErrorController: Controller
+    public class ErrorController : Controller
     {
         /// <summary>
-        /// Captures all errors on HTTP
+        ///     Captures all errors on HTTP
         /// </summary>
         /// <param name="code"></param>
         /// <returns></returns>

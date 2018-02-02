@@ -5,24 +5,26 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using samples.microservice.core;
 using samples.microservice.repository;
+using Serilog;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace samples.microservice.api
 {
     public class Startup
     {
-        ///  <summary>
-        ///  </summary>
-        ///  <param name="configuration"></param>
+        private readonly ILoggerFactory _loggerFactory;
+
+        /// <summary>
+        /// </summary>
+        /// <param name="configuration"></param>
         /// <param name="loggerFactory"></param>
         public Startup(IConfiguration configuration, ILoggerFactory loggerFactory)
         {
             Configuration = configuration;
-            Logger = loggerFactory.CreateLogger("samples.microservices");
+            _loggerFactory = loggerFactory;
         }
 
         public IConfiguration Configuration { get; }
-
-        public ILogger Logger { get; set; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -30,22 +32,27 @@ namespace samples.microservice.api
             // add MVC as a service
             services.AddMvc();
 
-            // add the cosmos repository to the configuration
-            // services.AddSingleton<IRepository, CosmosRepository>();
+            // Add SeriLog as provider for logging
+            // Configure Serilog
+            //TODO: configure logger per environment, this can be done in config as well
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.ColoredConsole().CreateLogger();
+            _loggerFactory.AddSerilog(dispose: true);
 
             //add the repositories to the configuration
-            services.AddRepository<CosmosRepository>(configuration: Configuration, logger: Logger);
+            services.AddRepository<CosmosRepository>(Configuration, _loggerFactory);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory factory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             // show custom error pages
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                factory.AddConsole();
-                factory.AddDebug();
+                _loggerFactory.AddConsole();
+                _loggerFactory.AddDebug();
             }
             else
             {
@@ -55,8 +62,8 @@ namespace samples.microservice.api
             app.UseStatusCodePagesWithReExecute("/error/{0}");
             // add support for custom exception handling middleware,
             // this will allow for all exception messages to be handled by a common middleware
+            // app.UseMiddleware<ErrorHandlingMiddleware>();
 
-            app.UseMiddleware<ErrorHandlingMiddleware>();
             // use MVC framework and map routes to controllers
             app.UseMvc();
         }

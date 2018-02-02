@@ -1,38 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
-using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Documents.Linq;
 using Microsoft.Extensions.Configuration;
-using samples.microservice.core;
-using samples.microservice.entities;
 using Microsoft.Extensions.Logging;
+using samples.microservice.core;
 
 namespace samples.microservice.repository
 {
-    public class CosmosRepository: BaseRepository
+    public class CosmosRepository : BaseRepository
     {
         private static DocumentClient _client;
-        private readonly string _databaseName;
-        private readonly string _databaseCollectionName ;
         private readonly string _cosmosEndPoint;
         private readonly string _cosmosKey;
+        private readonly string _databaseCollectionName;
+        private readonly string _databaseName;
 
         /// <summary>
-        /// Constructor for CosmosRepository
+        ///     Constructor for CosmosRepository
         /// </summary>
         /// <param name="configuration"></param>
-        /// <param name="logger"></param>
-        public CosmosRepository(IConfiguration configuration, ILogger logger) : base(configuration, logger)
+        /// <param name="loggerFactory"></param>
+        public CosmosRepository(IConfiguration configuration, ILoggerFactory loggerFactory) : base(configuration, loggerFactory)
         {
             try
             {
-                // TODO: Move this away from constructor into OWIN middleware
                 // get the cosmos values from configuration
                 _cosmosEndPoint = configuration["cosmos-uri"];
                 _cosmosKey = configuration["cosmos-key"];
@@ -41,16 +38,16 @@ namespace samples.microservice.repository
             }
             catch (Exception e)
             {
-                logger.LogError($"Error occurred: {e.Message}", e);
+                Logger.LogError($"Error occurred: {e.Message}", e);
                 throw;
             }
         }
 
         /// <summary>
-        /// Initialized the database if not already
+        ///     Initialized the database if not already
         /// </summary>
         /// <returns></returns>
-        private  async Task<bool> EnsureClientConnected(CancellationToken token)
+        private async Task<bool> EnsureClientConnected(CancellationToken token)
         {
             try
             {
@@ -62,7 +59,8 @@ namespace samples.microservice.repository
                     ConnectionPolicy =
                     {
                         ConnectionMode = ConnectionMode.Direct,
-                        ConnectionProtocol = Protocol.Https // TODO: move to TCP, firewall configuration blocking at the moment
+                        ConnectionProtocol =
+                            Protocol.Https // TODO: move to TCP, firewall configuration blocking at the moment
                     }
                 };
 
@@ -84,30 +82,36 @@ namespace samples.microservice.repository
         }
 
         /// <summary>
-        /// saves (Upsert) into the database
+        ///     saves (Upsert) into the database
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="modifiedby"></param>
         /// <param name="token"></param>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
-        public override async Task<bool> SaveAsync<TEntity>(TEntity entity, string modifiedby = null, CancellationToken token = default (CancellationToken))
+        public override async Task<bool> SaveAsync<TEntity>(TEntity entity, string modifiedby = null,
+            CancellationToken token = default(CancellationToken))
         {
             //TODO: Add Polly retry logic to ensure to connect back
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
+            var id = entity.Id.Trim();
+
             try
             {
                 await EnsureClientConnected(token);
 
                 // first check if the records already exists, if it does then update
-                var options = new RequestOptions {PartitionKey = new PartitionKey(entity.Id)};
-                var response = await _client.ReadDocumentAsync(UriFactory.CreateDocumentUri(_databaseName, _databaseCollectionName,
-                    entity.Id), options);
-                Logger.LogInformation("Found {0} during upsert", entity.Id);
+                var options = new RequestOptions {PartitionKey = new PartitionKey(id)};
+                var response = await _client.ReadDocumentAsync(UriFactory.CreateDocumentUri(_databaseName,
+                    _databaseCollectionName,
+                    id), options);
+                Logger.LogInformation("Found {0} during upsert", id);
 
                 // Update the document instead of adding a new one
-                await _client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(_databaseName, _databaseCollectionName, entity.Id),
+                await _client.ReplaceDocumentAsync(
+                    UriFactory.CreateDocumentUri(_databaseName, _databaseCollectionName, entity.Id),
                     entity);
-                Logger.LogInformation("Entity {0} Updated", entity.Id);
+                Logger.LogInformation("Entity {0} Updated", id);
             }
             catch (DocumentClientException de)
             {
@@ -116,8 +120,9 @@ namespace samples.microservice.repository
                 {
                     var options = new RequestOptions {PartitionKey = new PartitionKey(entity.Id)};
                     await _client.CreateDocumentAsync(
-                        UriFactory.CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), entity, options);
-                    Logger.LogInformation("Created new entity {0}", entity.Id);
+                        UriFactory.CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), entity,
+                        options);
+                    Logger.LogInformation("Created new entity {0}", id);
                 }
                 else
                 {
@@ -129,21 +134,23 @@ namespace samples.microservice.repository
         }
 
         /// <summary>
-        /// delete an entity from the database
+        ///     delete an entity from the database
         /// </summary>
         /// <param name="id"></param>
         /// <param name="token"></param>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public override async Task DeleteAsync<TEntity>(object id, CancellationToken token)
+        public override async Task<bool> DeleteAsync<TEntity>(string id, CancellationToken token)
         {
             try
             {
                 await EnsureClientConnected(token);
-                var options = new RequestOptions {PartitionKey = new PartitionKey(id.ToString())};
+                var options = new RequestOptions {PartitionKey = new PartitionKey(id.Trim())};
                 await _client.DeleteDocumentAsync(
-                    UriFactory.CreateDocumentUri(_databaseName, _databaseCollectionName, id.ToString()), options);
+                    UriFactory.CreateDocumentUri(_databaseName, _databaseCollectionName, id.Trim()), options);
+                Logger.LogInformation($"Deletion of {id} was successfull.");
+                return true;
             }
             catch (Exception e)
             {
@@ -153,25 +160,29 @@ namespace samples.microservice.repository
         }
 
         /// <summary>
-        /// reads the entity based on Id
+        ///     reads the entity based on Id
         /// </summary>
         /// <param name="id"></param>
         /// <param name="token"></param>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
-        public override async Task<TEntity> ReadSingularAsync<TEntity>(object id,
+        public override async Task<TEntity> ReadSingularAsync<TEntity>(string id,
             CancellationToken token = default(CancellationToken))
         {
-            //TODO: Cosmos API does not support async query methods, need to investigate.
             try
             {
                 await EnsureClientConnected(token);
-                var entities = new List<TEntity>();
-                var queryOptions = new FeedOptions {MaxItemCount = -1};
-                var documentQuery = _client.CreateDocumentQuery<TEntity>(UriFactory
+                id = id.Trim();
+                var queryOptions = new FeedOptions {MaxItemCount = -1, EnableCrossPartitionQuery = true, PartitionKey = new PartitionKey(id)};
+                var query = _client
+                    .CreateDocumentQuery<TEntity>(UriFactory
                         .CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), queryOptions)
-                    .Where(c => c.Id == id.ToString());
-                return documentQuery.FirstOrDefault();
+                    //.Where(c => c.Id == id) // filter only on partition key
+                    .AsDocumentQuery();
+
+                var response = await query.ExecuteNextAsync<TEntity>(token);
+                Logger.LogInformation($"Records returned for singular query {response.Count}");
+                return response.FirstOrDefault();
             }
             catch (Exception e)
             {
@@ -181,23 +192,22 @@ namespace samples.microservice.repository
         }
 
         /// <summary>
-        /// Reads the entity from the database and returns the top 10 documents
+        ///     Reads the entity from the database and returns the top 10 documents
         /// </summary>
         /// <typeparam name="TEntity"></typeparam>
         /// <returns></returns>
         public override async Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey, int maxItemCount,
             CancellationToken token)
         {
-            //TODO: Cosmos API does not support async query methods, need to investigate.
             try
             {
                 await EnsureClientConnected(token);
                 var entities = new List<TEntity>();
-                var queryOptions = new FeedOptions {MaxItemCount = maxItemCount};
+                var queryOptions = new FeedOptions {MaxItemCount = maxItemCount, EnableCrossPartitionQuery = true};
                 var documentQuery = _client.CreateDocumentQuery<TEntity>(UriFactory
                     .CreateDocumentCollectionUri(_databaseName, _databaseCollectionName), queryOptions);
                 entities.AddRange(documentQuery);
-
+                Logger.LogInformation($"Records returned for multiple query {entities.Count}");
                 return entities;
             }
             catch (Exception e)

@@ -2,28 +2,33 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-
 using Microsoft.Extensions.Logging;
 
 namespace samples.microservice.core
 {
     /// <summary>
-    /// Template pattern for repository building
+    ///     Template pattern for repository building
     /// </summary>
-    public abstract class BaseRepository: IRepository
+    public abstract class BaseRepository : IRepository
     {
-        protected IConfiguration Configuration;
-        protected ILogger Logger;
+        protected readonly IConfiguration Configuration;
+        protected readonly ILogger Logger;
 
-        protected BaseRepository(IConfiguration configuration, ILogger logger)
+        protected BaseRepository(IConfiguration configuration, ILoggerFactory loggerFactory)
         {
             Configuration = configuration;
-            Logger = logger;
+            Logger = loggerFactory.CreateLogger<BaseRepository>();
         }
 
-        public abstract Task<bool> SaveAsync<TEntity>(TEntity entity, string modifiedby = null, CancellationToken token = default (CancellationToken)) where TEntity : Entity;
-        public abstract Task DeleteAsync<TEntity>(object id, CancellationToken token) where TEntity : Entity;
-        public abstract Task<TEntity> ReadSingularAsync<TEntity>(object id, CancellationToken token = default (CancellationToken)) where TEntity : Entity;
-        public abstract Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey, int maxItemCount, CancellationToken token) where TEntity : Entity;
+        public abstract Task<bool> SaveAsync<TEntity>(TEntity entity, string modifiedby = null,
+            CancellationToken token = default(CancellationToken)) where TEntity : Entity;
+
+        public abstract Task<bool> DeleteAsync<TEntity>(string id, CancellationToken token) where TEntity : Entity;
+
+        public abstract Task<TEntity> ReadSingularAsync<TEntity>(string id,
+            CancellationToken token = default(CancellationToken)) where TEntity : Entity;
+
+        public abstract Task<List<TEntity>> ReadAsync<TEntity>(string partitionKey, int maxItemCount,
+            CancellationToken token) where TEntity : Entity;
     }
 }

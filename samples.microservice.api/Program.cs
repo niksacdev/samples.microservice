@@ -14,8 +14,9 @@ namespace samples.microservice.api
             BuildWebHost(args).Run();
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
+        public static IWebHost BuildWebHost(string[] args)
+        {
+            return WebHost.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration((context, config) =>
                 {
                     // ensure settings are being read
@@ -58,7 +59,7 @@ namespace samples.microservice.api
                     // add the configuration file for getting keyvault configuration data
                     config.SetBasePath(Directory.GetCurrentDirectory())
                         .AddEnvironmentVariables()
-                        .AddJsonFile($"secrets.{env.EnvironmentName}.json", optional: false, reloadOnChange: true);
+                        .AddJsonFile($"secrets.{env.EnvironmentName}.json", false, true);
 
                     // add azure key vault configuration
                     var buildConfig = config.Build();
@@ -68,23 +69,9 @@ namespace samples.microservice.api
 
                     // setup KeyVault store for getting configuration values
                     config.AddAzureKeyVault(vaultUri, buildConfig["clientId"], buildConfig["clientSecret"]);
-
-                })
-                .ConfigureLogging((context, logging) =>
-                {
-                    // Configure Serilog
-                    // adding logging configuration to enable serilog
-                    //TODO: configure logger per environment
-                    Log.Logger = new LoggerConfiguration()
-                        .MinimumLevel.Verbose()
-                        .WriteTo.ColoredConsole().CreateLogger();
-
-                    // configure serilog as the middleware
-                    logging.AddSerilog(dispose: true);
-                    logging.AddConsole();
-                    logging.AddDebug();
                 })
                 .UseStartup<Startup>()
                 .Build();
+        }
     }
 }

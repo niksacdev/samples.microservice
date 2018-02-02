@@ -9,10 +9,10 @@ namespace samples.microservice.core
     {
         public static IServiceCollection AddRepository<T>(this IServiceCollection services,
             IConfiguration configuration,
-            ILogger logger) where T : BaseRepository
+            ILoggerFactory loggerFactory) where T : BaseRepository
         {
             return services.AddSingleton<IRepository, T>(_ =>
-                Activator.CreateInstance(typeof(T), configuration, logger) as T);
+                Activator.CreateInstance(typeof(T), configuration, loggerFactory) as T);
         }
     }
 }

@@ -1,11 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Reflection.Emit;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using samples.microservice.core;
 
 namespace samples.microservice.entities
 {
-    public class VehicleData: Entity
+    public class VehicleData : Entity
     {
         [JsonProperty(PropertyName = "vin")]
         public string Vin { get; set; }
@@ -24,6 +22,5 @@ namespace samples.microservice.entities
 
         [JsonProperty(PropertyName = "headlight")]
         public bool HeadLights { get; set; }
-
     }
 }

@@ -12,7 +12,7 @@ namespace samples.microservice.core
 
         public ErrorHandlingMiddleware(RequestDelegate next)
         {
-            this._next = next;
+            _next = next;
         }
 
         public async Task Invoke(HttpContext context /* other scoped dependencies */)
@@ -44,9 +44,9 @@ namespace samples.microservice.core
                     break;
             }
 
-            var result = JsonConvert.SerializeObject(new { error = exception.Message });
+            var result = JsonConvert.SerializeObject(new {error = exception.Message});
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)code;
+            context.Response.StatusCode = (int) code;
             return context.Response.WriteAsync(result);
         }
     }
