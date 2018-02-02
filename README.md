@@ -23,9 +23,9 @@ Instead of putting your Azure Key Vault details in a appSettings or secrets.json
 You can use kubectl to create ConfigMaps and Secrets, you will need the below configurations:
 ````
 kubectl create configmap vault --from-literal=vault=<<your keyvault name here>>   
-kubectl create configmap kvuri --from-literal=kvuri=https://{vault-name}.vault.azure.net/
+kubectl create configmap kvuri --from-literal=kvuri=https://{vault-name}.vault.azure.net/ #DONT change this, the value gets injected automatically for this config.
 kubectl create configmap clientid --from-literal=clientId=<<your client Id here>>  
-k create secret generic clientsecret --from-literal=clientSecret=<<your client secret here>>
+kubectl create secret generic clientsecret --from-literal=clientSecret=<<your client secret here>>
 ````
 - Configure your docker hub image name and registry settings:
 Once you have the config settings in, you need to push the container in your docker hub or private registry. 
