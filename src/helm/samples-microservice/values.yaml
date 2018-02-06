@@ -3,8 +3,8 @@
 # Declare variables to be passed into your templates.
 replicaCount: 1
 image:
-  repository: niksac/vehicleapi
-  tag: v4
+  repository: <yourdockerhub>/<yourdockerimage>
+  tag: <<yourdockertag>
   pullPolicy: Always
 service:
   name: vehicle-api
