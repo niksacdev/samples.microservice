@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: vehicleapi #name for the container configuration
-        image: niksac/vehicleapi:v1 # the tag for the container to be deployed
+        image: <yourdockerhub>/<youdockerimage>:<youdockertagversion> # **CHANGE THIS: the tag for the container to be deployed
         imagePullPolicy: Always #getting latest image on each deployment
         ports:
         - containerPort: 80 #map to port 80 in the docker container

@@ -51,7 +51,6 @@ namespace samples.microservice.api
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                _loggerFactory.AddConsole();
                 _loggerFactory.AddDebug();
             }
             else
@@ -59,7 +58,9 @@ namespace samples.microservice.api
                 app.UseExceptionHandler("/error/500");
             }
 
-            app.UseStatusCodePagesWithReExecute("/error/{0}");
+            _loggerFactory.AddConsole(LogLevel.Debug);
+
+            // app.UseStatusCodePagesWithReExecute("/error/{0}");
             // add support for custom exception handling middleware,
             // this will allow for all exception messages to be handled by a common middleware
             // app.UseMiddleware<ErrorHandlingMiddleware>();

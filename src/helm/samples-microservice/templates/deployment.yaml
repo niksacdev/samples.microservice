@@ -1,0 +1,53 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "samples.microservice.fullname" . }}
+  labels:
+    app: {{ template "samples.microservice.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "samples.microservice.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      imagePullSecrets: #secret to get details of private repo, disable this if using public docker repo
+          - name: regsecret
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.internalPort }}
+          env: #set environment variables for the docker container using configMaps and Secret Keys
+          - name: clientId
+            valueFrom:
+              configMapKeyRef:
+                name: clientid
+                key: clientId
+          - name: kvuri
+            valueFrom:
+              configMapKeyRef:
+                name: kvuri
+                key: kvuri
+          - name: vault
+            valueFrom:
+              configMapKeyRef:
+                name: vault
+                key: vault
+          - name: clientsecret
+            valueFrom:
+              secretKeyRef:
+                name: clientsecret
+                key: clientSecret
+          resources:
+            {{ toYaml .Values.resources | indent 12 }}
+            {{- if .Values.nodeSelector }}
+            nodeSelector:
+             {{ toYaml .Values.nodeSelector | indent 8 }}
+            {{- end }}
+

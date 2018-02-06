@@ -17,6 +17,7 @@ namespace samples.microservice.api
         public static IWebHost BuildWebHost(string[] args)
         {
             return WebHost.CreateDefaultBuilder(args)
+                .UseContentRoot(Directory.GetCurrentDirectory())
                 .ConfigureAppConfiguration((context, config) =>
                 {
                     /*** CONVENTIONAL WAY: See below for conventional way of getting secrets from a config file, this requires a configuration file with
