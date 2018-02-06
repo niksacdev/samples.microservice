@@ -1,4 +1,5 @@
 # The Zero Config Microservice: using Kubernetes and Azure KeyVault
+>For more details on the architecture and the concepts behind this sample, check out my blog here: https://connectedstuff.io/2018/02/06/the-zero-config-microservice-using-kubernetes-and-azure-keyvault-2/ 
 
 ### A sample microservice project to demonstrate the following: 
 - use of Azure keyvault and Kubernetes ConfigMaps for Configuration, it stresses on the importance of separating DevOps functions from Developer functions by have no appSettings, Secrets, blah blah .json files in code. All data is injected through Kubernetes or asked specifically from Azure Key Vault. 
